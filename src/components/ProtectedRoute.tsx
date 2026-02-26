@@ -1,28 +1,26 @@
-import React, { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React from 'react';
+import { Route, Redirect } from 'react-router-dom';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+    component: React.ComponentType;
+    isAuthenticated: boolean;
+    path: string;
+    exact?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { currentUser, loading } = useAuth();
-
-  if (loading) {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ component: Component, isAuthenticated, ...rest }) => {
     return (
-      <div className="loading-screen">
-        <div className="spinner"></div>
-        <p>Loading...</p>
-      </div>
+        <Route
+            {...rest}
+            render={props => {
+                return isAuthenticated ? (
+                    <Component {...props} />
+                ) : (
+                    <Redirect to={{ pathname: '/login', state: { from: props.location } }} />
+                );
+            }}
+        />
     );
-  }
-
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
 };
 
 export default ProtectedRoute;
